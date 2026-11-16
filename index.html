@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090909">
+<meta name="description" content="SUBHASH AI personal voice assistant">
+<link rel="manifest" href="manifest.webmanifest">
+<title>SUBHASH AI</title>
+<style>
+:root{color-scheme:dark;--bg:#080808;--panel:#141414;--orange:#ff7a00;--muted:#a7a7a7}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 15%,#241306 0,#080808 42%);color:#fff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.app{max-width:520px;margin:auto;min-height:100vh;padding:22px 18px 28px;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:850;letter-spacing:2px;font-size:21px}.brand span{color:var(--orange)}
+.status{font-size:11px;color:#9bd6a7;border:1px solid #285b35;padding:6px 10px;border-radius:20px}
+.intro{text-align:center;margin:42px 0 22px}.eyebrow{color:var(--orange);font-size:11px;letter-spacing:3px;font-weight:700}
+h1{font-size:30px;margin:9px 0 5px}.sub{color:var(--muted);font-size:14px}
+.orb-wrap{display:flex;justify-content:center;margin:18px 0 22px}
+.orb{width:176px;height:176px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ffb15e,#ff7900 36%,#5b2600 70%,#160b04);box-shadow:0 0 35px #ff790055, inset 0 0 24px #fff3;border:1px solid #ffb15e66}
+.orb.listening{animation:pulse 1.1s infinite}
+.mic{font-size:56px;filter:drop-shadow(0 4px 9px #3a1600)}
+@keyframes pulse{50%{transform:scale(1.06);box-shadow:0 0 65px #ff7900aa}}
+.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+button{border:0;border-radius:14px;padding:13px 17px;font-weight:700;font-size:14px;cursor:pointer}
+.primary{background:var(--orange);color:#160b02}.secondary{background:#222;color:#fff;border:1px solid #383838}
+#hint{text-align:center;color:var(--muted);font-size:12px;margin:13px 0 18px;min-height:18px}
+.chat{background:#111;border:1px solid #282828;border-radius:18px;padding:14px;min-height:145px;max-height:34vh;overflow:auto}
+.chat-title{font-size:11px;color:var(--orange);letter-spacing:1.5px;margin-bottom:10px;font-weight:800}
+.msg{padding:10px 12px;border-radius:13px;margin:8px 0;line-height:1.45;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{background:#202020;margin-right:22px}.user{background:#42240e;margin-left:22px}
+.composer{display:flex;gap:8px;margin-top:12px}.composer input{min-width:0;flex:1;background:#171717;border:1px solid #333;border-radius:13px;padding:13px;color:#fff;font-size:14px}
+.composer button{padding:0 16px}
+.note{font-size:11px;color:#777;text-align:center;line-height:1.5;margin-top:auto;padding-top:22px}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand">SUBHASH <span>AI</span></div><div class="status">● ONLINE UI</div></header>
+<section class="intro">
+<div class="eyebrow">YOUR PERSONAL ASSISTANT</div>
+<h1>How can I help you?</h1>
+<div class="sub">Talk or type to start your conversation</div>
+</section>
+<div class="orb-wrap"><div class="orb" id="orb"><div class="mic">🎙️</div></div></div>
+<div class="actions">
+<button class="primary" id="listenBtn">🎙️ Start speaking</button>
+<button class="secondary" id="stopBtn">■ Stop voice</button>
+</div>
+<div id="hint">Tap the microphone and speak in Hindi or English.</div>
+<section class="chat" aria-live="polite">
+<div class="chat-title">CONVERSATION</div>
+<div id="messages"><div class="msg bot">Namaste! Main SUBHASH AI hoon. Aap bolkar ya type karke baat shuru kar sakte hain.</div></div>
+</section>
+<div class="composer">
+<input id="prompt" placeholder="Type your message..." autocomplete="off">
+<button class="primary" id="sendBtn">Send</button>
+</div>
+<div class="note">Prototype v1 · Voice input/output uses your browser. Online AI replies will work after a secure AI backend is connected. Never put a private API key in this page.</div>
+</div>
+<script>
+const messages=document.getElementById('messages'), hint=document.getElementById('hint'), orb=document.getElementById('orb');
+function addMessage(text,who){const el=document.createElement('div');el.className='msg '+who;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight}
+function speak(text){if(!('speechSynthesis' in window)){hint.textContent='Speech output is not supported in this browser.';return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=/[\u0900-\u097F]/.test(text)?'hi-IN':'en-IN';speechSynthesis.speak(u)}
+async function sendText(text){text=text.trim();if(!text)return;addMessage(text,'user');document.getElementById('prompt').value='';
+  // Safe placeholder: no API key is stored in this client. Connect a private backend to enable real AI answers.
+  const reply='Maine aapka message suna: "'+text+'". Real AI answers enable karne ke liye SUBHASH AI ka secure online backend connect karna hoga.';
+  addMessage(reply,'bot');speak(reply);
+}
+document.getElementById('sendBtn').onclick=()=>sendText(document.getElementById('prompt').value);
+document.getElementById('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')sendText(e.target.value)});
+let recognition;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){recognition=new SR();recognition.lang='hi-IN';recognition.interimResults=false;recognition.maxAlternatives=1;
+ recognition.onstart=()=>{orb.classList.add('listening');hint.textContent='Listening... Ab boliye.'};
+ recognition.onresult=e=>{const t=e.results[0][0].transcript;hint.textContent='You said: '+t;sendText(t)};
+ recognition.onerror=e=>{hint.textContent='Voice error: '+e.error+'. Chrome mein microphone permission check karein.'};
+ recognition.onend=()=>orb.classList.remove('listening');
+}else{document.getElementById('listenBtn').disabled=true;hint.textContent='Voice recognition not supported. Android Chrome mein open karein.'}
+document.getElementById('listenBtn').onclick=()=>{if(recognition){recognition.lang='hi-IN';recognition.start()}};
+document.getElementById('stopBtn').onclick=()=>{if(recognition)recognition.stop();if('speechSynthesis'in window)speechSynthesis.cancel();hint.textContent='Voice stopped.';orb.classList.remove('listening')};
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
